@@ -1,0 +1,1850 @@
+<?php 
+
+
+// calibration, EQC,Kit,checklist
+
+$reflex='';
+					//if 'no'=>it will bypass reflex testing
+date_default_timezone_set('Asia/Kolkata');
+
+/////////////////////////////////
+function login_varify()
+{
+return mysql_connect('127.0.0.1',$_SESSION['login'],$_SESSION['password']);
+}
+
+/////////////////////////////////
+function select_nchsls($link)
+{
+	return mysql_select_db('biochemistry',$link);
+}
+
+///////////////////////////////////
+function start_nchsls()
+{
+	if(!$link=login_varify())
+	{
+		exit();
+	}
+
+
+	if(!select_nchsls($link))
+	{
+		exit();
+	}
+return $link;
+}
+
+function my_mysql_query($sql,$link)
+{
+	if(strpos($sql,'update')>=0 || strpos($sql,'delete')>=0||strpos($sql,'insert'>=0))
+	{
+		$log='insert into log values(\'\',sysdate(),current_user(),\''.mysql_real_escape_string($sql,$link).'\')';
+		//echo $log;
+		mysql_query($log,$link);
+	}
+	return mysql_query($sql,$link);
+}
+
+/*
+
+select resident in charge
+grant previlages and create users
+
+TAT- sample and exam wise OK
+EQA-data and comment      
+Monthly summary
+calibration data
+kit management-batch management
+complain,feedback
+repeat-batch to know pending, not-entered receipt, not-run sample
+printed-dispatched
+
+ */
+function main_menu()
+{
+	echo '<link rel="stylesheet" type="text/css" href="horizontal.css">
+	<script type="text/javascript" href=menu.js></script>
+	<table border=0><tr><td>
+	<div id="navbar">
+	<ul>
+	<li><a href="#">New</a>
+		<ul>
+			<li><a href=new_request.php>New</a>
+			<li><a href=new_request_FS.php>New Copy[F-S]</a>
+			<li><a href=new_request_barcode.php>New barcode</a>
+		</ul>
+	<li><a href="#">Edit</a>
+		<ul>
+			<li><a href=edit_request.php>Edit</a>
+			<li><a href=delete_sample_request.php>Delete Sample</a>
+			<li><a href=delete_examination_request.php>Delete Examination</a>
+			<li><a href=attachment.php>Manage Attachment</a>
+		</ul>
+	<li><a href="#">Worklist</a>
+		<ul>
+			<li><a href=1_by_1.php>1-by-1</a>
+			<li><a href=send_sample_to_XL_640.php>Send to XL-640</a>
+			<li><a href=manage_barcoded_batch_of_XL_640.php>Manage Barcoded Batch of XL-640</a>
+			<li><a href=send_sample_to_miura.php>Send to Miura-300</a>
+			<li><a href=examination_wise_worklist.php>Examination wise worklist</a>
+			<li><a href=sample_wise_worklist.php>Sample wise worklist</a>
+		</ul>
+	<li><a href="#">Result</a>
+		<ul>
+			<li><a href=import_results_XL_640.php>Import from Erba XL-640</a>';
+
+//comment below this when autoverification needs to be turned off	
+//<li><a href=print_report_pdf.php>Print-PDF-A5</a>		
+	echo '	<li><a href=import_autoverify_results_XL_640.php>Import-cum-autoverify Erba XL-640</a>
+			<li><a href=autoverify.php>Autoverify 1-by-1</a>
+			<li><a href=search_autoverify.php>Search-cum-Autoverify</a>';
+			
+	echo '	<li><a href=critical_report.php>Critical Report</a>
+			<li><a href=examination_wise_results.php>Examination wise Entry</a>	
+			<li><a href=import_results_miura.php>Import from Miura-300</a>
+		</ul>
+	<li><a href="#">Report</a>
+		<ul>
+			<li><a href=print_report.php>Print</a>		
+				
+			<li><a href=print_report_pdf_A4.php>Print-PDF-A4</a>
+
+		</ul>
+	<li><a href="#">Quality</a>
+		<ul>
+			<li><a href=import_qc.php>Import QC</a>
+			<li><a href=repeat_check.php>Repeat Check</a>
+			<li><a href=lj_chart.php>LJ chart/ insert/comment QC</a>
+			<li><a href=refrigerator_temperature.php>Refrigerator Temperatures</a>
+			<li><a href=environmental_parameter.php>Environmental Parameter</a>
+			<li><a href=equipment_log.php>Equipment Log</a>
+			<li><a href=equipment_record.php>Equipment Record</a>
+			<li><a href=nc.php>Nonconformity Records</a>
+			<li><a href=consumable.php>Inventory Records</a>
+			<li><a href=reagent.php>Reagents</a>
+			<li><a href=calibration.php>Calibrations</a>
+			<li><a href=get_monthly_qc_data.php>Monthly QC Records</a>
+		</ul>
+	<li><a href="#">Documents/Records</a>
+			<ul>
+				<li><a target=_blank href="NCHSLS/c/001 Biochemistry/Documents/Internal Documents/BI 0015 Standard Oprating Procedures Manual/SOP">SOP</a>		
+				<li><a target=_blank href=view_scope.php>Scope</a></li>
+				<li><a href=view_data.php>View (from database)</a>
+				<li><a href=NCHSLS target="_blank">View(from file system)</a>
+				<li><a href=upload.php>Upload </a>
+				<li><a href=letter.php>Letter</a>
+				<li><a href="NCHSLS/c/001%20Biochemistry/Documents/Internal%20Documents/BI%200026%20Physical%20copy%20of%20online%20LIS%20user-manual/BI%200025%20Physical%20copy%20of%20online%20LIS%20user-manual.pdf">User Manual</a>
+			</ul>
+	
+	<li><a href="schedule.php">Reminders('.count_cron().')</a>
+
+	<li><a href="#">'.$_SESSION['login'].'</a>
+			<ul>
+				<li><a href="logout.php">Logout</a>
+				<li><a href="change_password.php">Change Password</a>
+				<li><a href="mlamp.php" target=_blank>About</a>				
+				<li><a href="suggestion.php" target=_blank>Suggestion</a>
+			</ul>
+	</ul></div>
+
+	</td></tr></table>';
+}
+
+function mk_select_from_table($field,$disabled,$default)
+{
+	$link=start_nchsls();
+	//$sql='select * from '.$field;
+	$sql='select `'.$field.'` from '.$field;
+	if(!$result=mysql_query($sql,$link)){return FALSE;}
+	
+		echo '<select  '.$disabled.' name='.$field.'>';
+		while($result_array=mysql_fetch_assoc($result))
+		{
+		if($result_array[$field]==$default)
+		{
+			echo '<option selected  > '.$result_array[$field].' </option>';
+		}
+		else
+			{
+				echo '<option  > '.$result_array[$field].' </option>';
+			}
+		}
+		echo '</select>';	
+		return TRUE;
+}
+
+function mk_select_from_sql($sql,$name,$disabled,$default)
+{
+	$link=start_nchsls();
+	if(!$result=mysql_query($sql,$link)){return FALSE;}
+	
+		echo '<select  '.$disabled.' name='.$name.'>';
+		while($result_array=mysql_fetch_assoc($result))
+		{
+		if($result_array[$name]==$default)
+		{
+			echo '<option selected  > '.$result_array[$name].' </option>';
+		}
+		else
+			{
+				echo '<option  > '.$result_array[$name].' </option>';
+			}
+		}
+		echo '</select>';	
+		return TRUE;
+}
+
+
+function mk_select_from_array_return_key($name, $select_array,$disabled,$default)
+{
+		echo '<select  '.$disabled.' name='.$name.'>';
+		foreach($select_array as $key=>$value)
+		{
+		if($value==$default)
+		{
+			echo '<option selected value=\''.$key.'\' > '.$value.' </option>';
+		}
+		else
+			{
+				echo '<option  value=\''.$key.'\' > '.$value.' </option>';
+			}
+		}
+		echo '</select>';	
+		return TRUE;
+}
+
+function mk_select_from_array_return_value($name, $select_array,$disabled,$default)
+{
+		echo '<select  '.$disabled.' name='.$name.'>';
+		foreach($select_array as $key=>$value)
+		{
+		if($value==$default)
+		{
+			echo '<option selected value=\''.$value.'\' > '.$value.' </option>';
+		}
+		else
+			{
+				echo '<option  value=\''.$value.'\' > '.$value.' </option>';
+			}
+		}
+		echo '</select>';	
+		return TRUE;
+}
+
+function edit_sample($sample_id,$filename,$disabled,$type_preservative_change)
+{
+	$link=start_nchsls();
+	$counter=1;
+	$sql_sample_data='select * from sample where sample_id='.$sample_id;
+
+	if(mysql_num_rows($result_sample_data=mysql_query($sql_sample_data,$link))!=1){echo 'No such Sample';return FALSE;}
+	$sample_array=mysql_fetch_assoc($result_sample_data);
+
+			
+	echo '<form method=post action=\''.$filename.'\'>';
+	echo '	<table  border=1 bgcolor=lightyellow CELLPADDING=0 CELLSPACING=0>	
+			<tr>
+			<td>
+				<button type=submit name=action '.$disabled.' value=save_sample>save sample</button>
+			</td>
+				<th colspan=8 align=left>Sample Entry Form</th></tr>';
+	foreach($sample_array as $key=>$value)
+	{
+		if($counter%4==1){echo '<tr>';}
+		if($key=='sample_id')
+		{
+			echo '<td>'.$key.'</td><td><input type=text  readonly value=\''.$value.'\' name='.$key.'></td>';
+		}
+		
+		elseif( ($key=='sample_type' || $key=='preservative') && $type_preservative_change=='no')
+		{
+			echo '<td>'.$key.'</td><td><input type=text  readonly value=\''.$value.'\' name='.$key.'></td>';
+		}
+		
+		
+		else
+		{
+			echo '<td>'.$key.'</td><td>';
+			if(!mk_select_from_table($key,$disabled,$value))
+			{
+				echo '<input type=text  '.$disabled.' value=\''.$value.'\' name='.$key.'>';
+			}
+			echo '</td>';
+		}
+		if($counter%4==0){echo '<tr>';}
+		$counter++;
+	}
+	echo '</form></table>';
+	return TRUE;
+}
+
+
+function save_sample($post_array)
+{
+	$link=start_nchsls();
+	$sql='update sample set ';
+		foreach ($post_array as $key => $value)
+		{
+			if($key!='action')
+			{		
+			$sql=$sql.' '.$key.'=\''.$value.'\' , ';
+			}
+		}
+
+	$sql=substr($sql,0,-2);
+	$sql=$sql.' where sample_id= \''.$post_array['sample_id'].'\'';
+	//echo $sql;
+
+	if(!mysql_query($sql,$link)){echo mysql_error(); return FALSE;}
+	return TRUE;
+}
+
+function change_sample_status($sample_id,$str)
+{
+	$link=start_nchsls();
+	$sql='update sample set status=\''.$str.'\' where sample_id=\''.$sample_id.'\'';
+	if(!mysql_query($sql,$link)){echo mysql_error(); return FALSE;}
+	return TRUE;
+}
+
+
+function sample_printed($sample_id_array)
+{
+	$link=start_nchsls();
+	foreach($sample_id_array as $sample_id)
+	{
+		$sql='update sample set details=\'printed\' where sample_id=\''.$sample_id.'\'';
+		if(!mysql_query($sql,$link)){echo mysql_error();}
+	}
+}
+function save_sample_FS($copy_sample_id,$paste_sample_id)
+{
+$link=start_nchsls();
+
+$csql='select * from sample where sample_id=\''.$copy_sample_id.'\'';
+$cresult=mysql_query($csql,$link);
+if(mysql_num_rows($cresult)!=1)
+{
+	echo 'from_sample_id do not exist<br>';
+	return;
+}
+$ar=mysql_fetch_assoc($cresult);
+
+$sql='update sample set ';
+
+	foreach ($ar as $key => $value)
+	{
+		if($key=='sample_id')
+		{
+			$sql=$sql.' '.$key.'=\''.$paste_sample_id.'\' , ';
+		}
+		else if($key=='preservative' && $value=='None')
+		{
+			$sql=$sql.' '.$key.'=\''.'Fluoride'.'\' , ';
+		}
+		else if($key=='preservative' && $value=='Fluoride')
+		{
+			$sql=$sql.' '.$key.'=\''.'None'.'\' , ';
+		}
+		else
+		{
+			$sql=$sql.' '.$key.'=\''.$value.'\' , ';	
+		}
+	}
+
+$sql=substr($sql,0,-2);
+$sql=$sql.' where sample_id= \''.$paste_sample_id.'\'';
+//echo $sql;
+
+if(!mysql_query($sql,$link)){echo mysql_error();}
+}
+
+
+function select_profile($sample_id,$filename)
+{
+	$link=start_nchsls();
+	$sql_sample_data='select sample_type,preservative from sample where sample_id='.$sample_id;
+	if(mysql_num_rows($result_sample_data=mysql_query($sql_sample_data,$link))!=1){echo 'No such Sample';return FALSE;}
+	$sample_array=mysql_fetch_assoc($result_sample_data);
+
+	$sql='select * from profile where (sample_type=\''.$sample_array['sample_type'].'\' and preservative=\''.$sample_array['preservative'].'\') or profile like \'Z_%\' ';
+
+	$result=mysql_query($sql,$link);
+
+	echo '<form method=post action=\''.$filename.'\'>';
+	echo '<table border=1 bgcolor=lightyellow CELLPADDING=0 CELLSPACING=0 >	
+			<tr><th colspan=8 align=left>Profiles</th>';
+	echo '<th nowrap><input type=hidden name=sample_id value=\''.$sample_id. '\'> </th>';
+	$counter=0;
+	echo '</tr><tr>';
+	echo '<input type=hidden name=action value=profile></td>';
+	while($ar=mysql_fetch_assoc($result))
+	{
+		foreach ($ar as $key => $value)
+		{		if($key=='profile')
+				{
+					echo '<td nowrap><button type=submit name=profile value=\''.$value.'\'>'.$value.'</button></td>';
+					$counter++;
+				}
+				if($counter%5==0){echo '</tr><tr>';}
+		}
+	}
+
+	echo '</tr></form></table>';
+}
+
+function insert_single_examination($sample_id,$id)
+	{
+		$link=start_nchsls();
+		$sql='select * from scope where id=\''.$id.'\'';
+		$result=mysql_query($sql,$link);
+		$post_array=mysql_fetch_assoc($result);
+				
+		$sql='insert into examination (`sample_id`, `id`, `name_of_examination`, `sample_type`, `preservative`, `method_of_analysis`, `result`, `unit`, `referance_range`, `code`, `details`,`NABL_Accredited`) 
+					values ('.
+					'\''.$sample_id.'\' , '.
+					'\''.$post_array['id'].'\' , '.
+					'\''.$post_array['name_of_examination'].'\' , '.
+					'\''.$post_array['sample_type'].'\' , '.
+					'\''.$post_array['preservative'].'\' , '.
+					'\''.$post_array['method_of_analysis'].'\' , '.
+					'\''.$post_array['result'].'\' , '.
+					'\''.$post_array['unit'].'\' , '.
+					'\''.$post_array['referance_range'].'\' , '.
+					'\''.$post_array['code'].'\' , '.
+					'\'\' , '.
+					'\''.$post_array['NABL_Accredited'].'\' , ';
+			$sql=substr($sql,0,-2);
+			$sql=$sql.')';
+			//echo $sql;
+			if(!mysql_query($sql,$link))
+			{
+				//echo mysql_error();
+			}
+			else
+			{
+				return mysql_affected_rows($link);
+			}
+					
+	}
+
+
+function insert_profile($sample_id,$profile)
+{
+	$link=start_nchsls();
+		$sql='select * from profile where profile=\''.$profile.'\'';
+		$result=mysql_query($sql,$link);
+		
+	while($profile_row=mysql_fetch_assoc($result))
+	{
+		foreach ($profile_row as $key => $value)   //for every row in profile
+		{
+			if($key!='profile' && $value!=NULL && $key!='sample_type' && $key!='preservative')
+			{
+			insert_single_examination($sample_id,$value);
+			}
+		}
+	}
+}
+
+
+function edit_examination($sample_id,$filename,$disabled)
+{
+	$link=start_nchsls();
+	$sql='select * from examination where sample_id=\''.$sample_id.'\'';
+	if(!$result=mysql_query($sql,$link)){echo 'No such Sample';return FALSE;}
+	if(mysql_num_rows($result)<1){echo 'No examinations';return FALSE;}
+	
+	echo '<table border=1 bgcolor=lightgrey CELLPADDING=0 CELLSPACING=0>';
+	echo '<form method=post action=\''.$filename.'\'>';
+	echo '<input type=hidden name=sample_id value=\''.$sample_id.'\'';		  
+	echo '<tr><td><input type=submit value=save_examination  '.$disabled.' name=action></td></td><th colspan=18 align=left>Examination Result Entry Form</th></tr>';
+	
+	$first='true';
+	while($ar=mysql_fetch_assoc($result))
+	{
+		echo '<tr>';
+		if($first=='true')
+		{
+			foreach ($ar as $key => $value)   //for every row in scope
+			{
+				echo '<th nowrap>'.$key.'</th>';
+			}
+			$first='false';			
+			echo '</tr>';
+		}
+		if($ar['id']<1000)
+		{
+			foreach ($ar as $key => $value)   //for every row in scope
+			{
+					if($key=='result')
+					{
+						echo '<td nowrap><input type=text '.$disabled.' name=\''.$ar['id'].'\' value=\''.$value.'\'></td>';
+					}
+					else
+					{
+						echo '<td nowrap>'.$value.'</td>';
+					}
+			}
+		}
+		elseif($ar['id']>=1000)
+		{
+			foreach ($ar as $key => $value)   //for every row in scope
+			{
+					if($key=='result')
+					{
+						echo '<td><b>'.trim($ar['name_of_examination'],'Z_').':</b></td><td colspan=20><input size=80 type=text '.$disabled.' name=\''.$ar['id'].'\' value=\''.$value.'\'></td>';
+					}
+			}
+		}
+		echo '</tr>';		
+	}
+	echo '</form></table>';
+}	
+
+/*
+array(
+action=>save_examination
+sample_id=>1234
+12=>1.2
+34=>34
+	)
+*/
+function save_examination($post_array)
+{
+	$link=start_nchsls();
+	foreach ($post_array as $key => $value)
+	{
+		if($key!='action')
+		{
+			$sql='update examination set result=\''.$value.'\' where sample_id=\''.$post_array['sample_id'].'\' and id=\''.$key.'\'';
+			if(!mysql_query($sql,$link)){echo mysql_error();}
+		}
+	}
+}
+
+function save_single_examination($sample_id,$examination_id,$result)
+{
+	$link=start_nchsls();
+	$sql='update examination set result=\''.$result.'\' where sample_id=\''.$sample_id.'\' and id=\''.$examination_id.'\'';
+	if(!mysql_query($sql,$link)){echo mysql_error();}
+}
+
+
+function save_single_examination_code($sample_id,$code,$result)
+{
+	$link=start_nchsls();
+	$sql='update examination set result=\''.$result.'\' where sample_id=\''.$sample_id.'\' and code=\''.$code.'\'';
+	if(!mysql_query($sql,$link)){echo mysql_error();}
+}
+
+function append_single_examination($sample_id,$examination_id,$result)
+{
+	$link=start_nchsls();
+	$sql='update examination set result=concat(result,\''.$result.'\') where sample_id=\''.$sample_id.'\' and id=\''.$examination_id.'\'';
+	if(!mysql_query($sql,$link)){echo mysql_error();}
+}
+
+function select_examination($sample_id,$filename,$disabled)
+{
+	$link=start_nchsls();
+	$sql_sample_data='select sample_type,preservative from sample where sample_id='.$sample_id;
+	
+	if(mysql_num_rows($result_sample_data=mysql_query($sql_sample_data,$link))!=1){echo 'No such Sample';return FALSE;}
+	
+	$sample_array=mysql_fetch_assoc($result_sample_data);
+	$sql='select * from scope where sample_type=\''.$sample_array['sample_type'].'\' and preservative=\''.$sample_array['preservative'].'\' or name_of_examination like \'Z_%\' order by name_of_examination';
+	//echo $sql;
+	$result=mysql_query($sql,$link);
+
+	echo '<table border=1 id=\'id\' bgcolor=lightgrey CELLPADDING=0 CELLSPACING=0>';
+	echo '<form method=post action=\''.$filename.'\'>';
+	echo '<input type=hidden name=sample_id value=\''.$sample_id.'\'';	
+	  
+	echo '<tr>
+			<input type=hidden value=select_examination  '.$disabled.' name=action>
+			<th colspan=18 align=left>Scope</th>
+		</tr>';
+	$first='true';
+	while($ar=mysql_fetch_assoc($result))
+	{
+		if($first=='true')
+		{
+			foreach ($ar as $key => $value)   //for every row in scope
+			{
+				echo '<th nowrap>'.$key.'</th>';
+			}
+			$first='false';			
+			
+		}
+		echo '<tr>';
+			foreach ($ar as $key => $value)   //for every row in scope
+			{
+					if($key=='id')
+					{
+						echo '<td nowrap><button type=submit '.$disabled.' name=\''.$key.'\' value=\''.$value.'\'>'.$value.'</button></td>';
+					}
+					else
+					{
+						echo '<td nowrap>'.$value.'</td>';
+					}
+			}
+		echo '</tr>';		
+	}
+	echo '</form></table>';
+
+}	
+
+function print_sample_worklist($sample_id)
+{
+		$link=start_nchsls();
+		$sql='select * from examination where sample_id=\''.$sample_id.'\'';
+		$result=mysql_query($sql,$link);
+		echo '<table border=1 bgcolor=lightblue>';
+		echo '<tr><td colspan=2 align=left>-----['.$sample_id.']-----<td>';
+		while($post_array=mysql_fetch_assoc($result))
+		{
+			echo '<tr><td>'.$post_array['name_of_examination'].'</td><td>'.$post_array['code'].'</td><td>'.$post_array['result'].'</td></tr>';
+		}
+		echo '</table>';
+}
+
+
+///////////////////////autoverify functions
+
+//used to find if result have anything other than 0-9 and .
+//even a space in the string means that it is not numeric
+
+
+
+
+
+
+function is_str_interger($str)
+{
+$nm=array('0','1','2','3','4','5','6','7','8','9');
+
+$strr=str_split($str);
+
+	foreach($strr as $key=>$value)
+		{
+		if(!in_array($value,$nm))
+			{
+			return FALSE;
+			}
+		}
+return $str;
+}
+					
+function is_str_num($str)
+{
+$nm=array('0','1','2','3','4','5','6','7','8','9','.');
+
+$strr=str_split($str);
+
+	foreach($strr as $key=>$value)
+		{
+		if(!in_array($value,$nm))
+			{
+			return FALSE;
+			}
+		}
+return $str;
+}
+
+function is_str_digit($str)
+{
+$nm=array('0','1','2','3','4','5','6','7','8','9');
+
+$strr=str_split($str);
+
+	foreach($strr as $key=>$value)
+		{
+		if(!in_array($value,$nm))
+			{
+			return FALSE;
+			}
+		}
+return $str;
+}
+
+function check_critical_abnormal_reportable($sample_id,$code)
+{
+	$link=start_nchsls();
+	$sql_sample_examination='
+		SELECT s.sample_id, s.sample_type, e.code, e.result, a.operator o1, a.value ov1, aa.operator o2, aa.value ov2, c.operator c1, c.value cv1, cc.operator c2, cc.value cv2,
+		r.operator r1, r.value rv1,rr.operator r2, rr.value rv2
+		FROM sample s
+		LEFT outer JOIN examination e          ON s.sample_id = e.sample_id
+		left outer JOIN abnormal_alert a        ON e.code = a.code      and  a.sample_type = s.sample_type
+		LEFT  outer  JOIN abnormal_alert aa ON e.code=aa.code      AND aa.sample_type = s.sample_type AND a.operator <> aa.operator
+		LEFT  outer JOIN critical_alert c         ON e.code=c.code       AND c.sample_type = s.sample_type
+		LEFT  outer JOIN critical_alert cc       ON e.code=cc.code     AND cc.sample_type = s.sample_type AND c.operator <> cc.operator
+		LEFT  outer JOIN reportable_alert r   ON e.code=r.code        and  a.sample_type = s.sample_type
+		LEFT  outer JOIN reportable_alert rr  ON e.code=rr.code       and  c.sample_type = rr.sample_type AND r.operator <> rr.operator
+
+		where s.sample_id =\''.$sample_id.'\' and e.code=\''.$code.'\'
+		group by e.code';
+
+				
+	if(!$result_sample_examination=mysql_query($sql_sample_examination,$link)){echo mysql_error();return -1;}
+    
+	$dt=mysql_fetch_assoc($result_sample_examination);
+	
+    if(strlen($dt['result'])<=0)
+	{
+		return -2;
+	}
+    elseif(!is_str_num($dt['result']))
+    {
+        return -3;
+    }
+    else
+    {	
+
+
+
+		if($dt['r1']=='less_than')
+		{
+			if($dt['result']<$dt['rv1']){return 1;}		//absurd low
+		}
+		if($dt['r2']=='less_than')
+		{
+			if($dt['result']<$dt['rv2']){return 1;}		//absurd low
+		}
+
+
+		
+		if($dt['r1']=='more_than')
+		{
+			if($dt['result']>$dt['rv1']){return 2;}		//absurd high
+		}
+		if($dt['r2']=='more_than')
+		{
+			if($dt['result']>$dt['rv2']){return 2;}		//absurd high
+		}
+		
+
+		if($dt['c1']=='less_than')
+		{
+			if($dt['result']<$dt['cv1']){return 3;}		//critical low
+		}
+		if($dt['c2']=='less_than')
+		{
+			if($dt['result']<$dt['cv2']){return 3;}		//critical low
+		}
+
+
+		
+		if($dt['c1']=='more_than')
+		{
+			if($dt['result']>$dt['cv1']){return 4;}		//critical high
+		}
+		if($dt['c2']=='more_than')
+		{
+			if($dt['result']>$dt['cv2']){return 4;}		//critical high
+		}
+		
+		
+		if($dt['o1']=='less_than')
+		{
+			if($dt['result']<$dt['ov1']){return 5;}		//abnormal low
+		}
+		if($dt['o2']=='less_than')
+		{
+			if($dt['result']<$dt['ov2']){return 5;}		//abnormal low
+		}
+
+
+		
+		if($dt['o1']=='more_than')
+		{
+			if($dt['result']>$dt['ov1']){return 6;}		//abnormal high
+		}
+		if($dt['o2']=='more_than')
+		{
+			if($dt['result']>$dt['ov2']){return 6;}		//abnormal high
+		}
+		
+		return 0;
+		
+	}
+		
+	
+}
+
+function get_all_details_of_a_sample($sample_id)
+{
+	$link=start_nchsls();
+	$sql_sample_examination='select 
+						*
+					from 
+						examination
+						join sample ON sample.sample_id = examination.sample_id
+					where 
+						sample.sample_id=\''.$sample_id.'\' ';
+	
+	if(!$result_sample_examination=mysql_query($sql_sample_examination,$link)){echo mysql_error();return FALSE;}
+	while ($array_sample_examination=mysql_fetch_assoc($result_sample_examination))
+	{	
+		$return_array[]=$array_sample_examination;
+	}
+
+		//echo '<pre>';
+		//print_r($return_array);
+		//echo '</pre>';	
+        if(!isset($return_array)){return FALSE;}
+		return $return_array;
+
+}
+
+
+function get_patient_id($sample_id)
+{
+	$all_details=get_all_details_of_a_sample($sample_id);
+	if(substr_compare($all_details[0]['patient_id'],'SUR',0,3)==0)
+	{
+		return $all_details[0]['patient_id'];
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+function get_sample_status($sample_id)
+{
+	$all_details=get_all_details_of_a_sample($sample_id);
+	return $all_details[0]['status'];
+}
+function get_all_sample_id_from_patient_id($patient_id)
+{
+	$link=start_nchsls();
+		$sql='select sample_id from sample where patient_id=\''.$patient_id.'\' order by sample_receipt_time desc';
+		if(!$result=mysql_query($sql,$link)){echo mysql_error();return FALSE;}
+		while ($array_sample_id=mysql_fetch_assoc($result))
+			{	
+				$return_array[]=$array_sample_id['sample_id'];
+				
+			}
+
+				//echo '<pre>';
+				//print_r($return_array);
+				//echo '</pre>';	
+				return $return_array;
+}
+
+function get_all_sample_id_from_sample_id($sample_id)
+{
+	$patient_id=get_patient_id($sample_id);
+	if($patient_id!=FALSE)
+	{
+		return get_all_sample_id_from_patient_id($patient_id);
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+// -2=not requested,  -1=not done
+function get_examination_result($code,$sample_id)
+{
+$all_array=get_all_details_of_a_sample($sample_id);
+if($all_array)
+{
+	foreach($all_array as $key=>$value)
+		{
+		foreach($value as $keyy=>$valuee)
+			{
+			if($valuee==$code && $keyy=='code')
+				{
+					return $value['result'];
+				}
+			}
+		}
+}
+return FALSE;
+}
+
+function get_examination_result_id($id,$sample_id)
+{
+$all_array=get_all_details_of_a_sample($sample_id);
+if($all_array)
+{
+	foreach($all_array as $key=>$value)
+		{
+		foreach($value as $keyy=>$valuee)
+			{
+			if($valuee==$id && $keyy=='id')
+				{
+					return $value['result'];
+				}
+			}
+		}
+}
+return FALSE;
+}
+
+function get_all_data_of_examination($code,$sample_id)
+{
+$all_array=get_all_details_of_a_sample($sample_id);
+if($all_array)
+{
+	foreach($all_array as $key=>$value)
+		{
+			if($value['code']==$code)
+			{
+				return $value;
+			}
+		}
+}
+return FALSE;
+}
+
+function get_chronology_of_an_examination($code,$sample_id)
+{
+$chronology=FALSE;
+if($sample_id_array=get_all_sample_id_from_sample_id($sample_id)) //return false if start not with SUR
+{
+foreach($sample_id_array as $key=>$value)
+	{
+			$chronology[$value]=get_all_data_of_examination($code,$value);
+	}
+return $chronology;
+}
+return FALSE;
+}
+
+function print_chronology_of_an_examination($chronology)
+{
+	if($chronology!=FALSE)
+	{	
+		foreach($chronology as $sample_id=>$data)
+		{
+			echo '<tr><td>'.$data['code'].'</td><td>'.$data['result'].'</td><td>'.$data['sample_details'].'</td><td>'.$data['sample_receipt_time'].'</td><td>'.$data['sample_id'].'</td><td>'.$data['patient_id'].'</td><td>'.$data['patient_name'].'</td></tr>';
+		}
+		
+		echo '<tr><td colspan=10 bgcolor=blue></td></tr>';
+	}
+	else
+	{
+		echo '<tr><td>MRD number format is wrong. Deltacheck terminated</td></tr>';
+				echo '<tr><td colspan=10 bgcolor=blue></td></tr>';
+	}
+}
+
+function print_chronology_of_a_sample($sample_id)
+{
+	$all_array=get_all_details_of_a_sample($sample_id);
+	if($all_array)																							//all tests
+	{
+		foreach($all_array as $all_ex_data)
+		{
+			$data=get_chronology_of_an_examination($all_ex_data['code'],$all_ex_data['sample_id']);
+			echo '<table bgcolor=lightgreen border=1>';
+				print_chronology_of_an_examination($data);
+			echo '</table>';
+		}
+	
+	}
+}
+
+function my_array_search($ar,$str)
+{
+	foreach($ar as $key=>$value)
+	{
+		if($value==$str)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+
+function check_critical_reporting($sample_id)
+{
+	insert_single_examination($sample_id,1005);
+	$result=get_examination_result_id(1005,$sample_id);
+	
+	if(strlen($result==0))
+	{
+		save_single_examination($sample_id,1005,strftime('%Y-%m-%d %H:%M:%S').'=>'.$_SESSION['login'].'=>TO_XYZ');
+		return 8;//incomplate reporting		
+	}
+	else
+	{
+		if(substr($result,-6,6)!='TO_XYZ')
+		{
+			return 0;
+		}
+		else
+		{
+			save_single_examination($sample_id,1005,strftime('%Y-%m-%d %H:%M:%S').'=>'.$_SESSION['login'].'=>TO_XYZ');
+			return 8;//incomplate reporting
+		}
+	}
+}
+
+function append_if_not($hay,$sample_id,$examination_id)
+{
+	$value=get_examination_result_id($examination_id,$sample_id);
+	$pos=strpos($value,$hay);
+		if($pos===FALSE)
+		{
+			append_single_examination($sample_id,$examination_id,$hay);
+		}
+}
+function indirect_bilirubin($sample_id)
+{
+	$tbil=get_examination_result('TBIL',$sample_id);
+	$dbil=get_examination_result('DBIL',$sample_id);	
+	if($tbil!=FALSE && $dbil!=FALSE)
+	{
+		if(is_str_num($tbil)!=FALSE && is_str_num($dbil)!=FALSE)
+		{
+			if($tbil>=$dbil)
+			{
+				save_single_examination_code($sample_id,'IBIL',$tbil-$dbil);
+			}
+			else
+			{
+				if(  (($dbil-$tbil)/$dbil)<0.1	)			//2 and 1.8 1 and 0.9 10 and 9
+				{
+					save_single_examination_code($sample_id,'IBIL','see remark');
+					insert_single_examination($sample_id,1007);
+					$str='The majority of bilirubin is conjugated in this patient.';
+					append_if_not($str,$sample_id,1007);
+				}
+				else
+				{
+					return 11;
+				}
+			}
+		}
+	}
+}
+
+
+
+function lipid_profile($sample_id)
+{
+	//echo '111';
+	$cho=get_examination_result('CHO',$sample_id);
+	$choh=get_examination_result('CHOH',$sample_id);
+	$chol=get_examination_result('CHOL',$sample_id);
+	$chov=get_examination_result('CHOV',$sample_id);
+	$tg=get_examination_result('TG',$sample_id);
+	
+	if($cho!=FALSE && $choh!=FALSE && $tg!=FALSE)  	//they are not null
+	{
+			//echo '222';
+		if 	(is_str_num($cho)!=FALSE && is_str_num($choh)!=FALSE && is_str_num($tg)!=FALSE)	//they are number
+		{
+				//echo '333';
+			if($tg<=400)
+			{
+					//echo '444';
+				save_single_examination_code($sample_id,'CHOV',($tg/5));
+				save_single_examination_code($sample_id,'CHOL',$cho - $choh -($tg/5));
+			}
+			else
+			{
+					//echo '555';
+				save_single_examination_code($sample_id,'CHOV','see remark');
+				save_single_examination_code($sample_id,'CHOL','see remark');
+				insert_single_examination($sample_id,1007);
+				$str='if TG>400 mg/dl then LDL can not be calculated. Direct-LDL assay is advised';
+				append_if_not($str,$sample_id,1007);
+			}
+		}
+	}
+		//both(TandD) are not done, both are not number, dbil>tbil
+}
+//4->6
+//31->7, 11.14,15,23.,65,
+//7->31,11.14.23.., 15 ,65,7
+function reflex_testing($sample_id,$examination_id)
+{
+	$return_value=0;
+	$sql='select * from reflex_examination where examination=\''.$examination_id.'\'';
+	$link=start_nchsls();
+	if(!$result=mysql_query($sql,$link)){echo mysql_error();return FALSE;}
+	while ($array=mysql_fetch_assoc($result))
+	{
+		$ret=insert_single_examination($sample_id,$array['reflex']);
+		if($ret>0){$return_value=$return_value+$ret;}
+	}
+	return $return_value;
+}
+
+
+function autoverify($sample_id,$filename,$action)
+{
+	global $reflex;
+	if(get_sample_status($sample_id)=='verified'){return;}
+	if(!$all_details=get_all_details_of_a_sample($sample_id)){return FALSE;}
+	$verified=0;
+	foreach ($all_details  as $key=>$value)
+	{
+		$error_code_array=array();
+		$acr_code=check_critical_abnormal_reportable($value['sample_id'],$value['code']);
+		
+		
+		//////////empty
+		if($acr_code==-2){$error_code_array[]=$acr_code;}								//-2 if empty
+		
+		//////////////critical 3,4
+		if($acr_code==3 || $acr_code==4)
+		{
+			$error_code_array[]=check_critical_reporting($sample_id);					//8 if incomplate
+		}
+		//////////////absurd 1,2		
+		if($acr_code==1 || $acr_code==2)
+		{			
+			insert_single_examination($value['sample_id'],1007);
+			append_if_not('Send new sample to resolve absurd values.',$sample_id,1007);
+			$error_code_array[]=$acr_code;												//1,2
+		}
+		
+		//////////reflax if abnormal(2,4,6)   //cholesterol=13
+		if($acr_code==2 || $acr_code==4 ||$acr_code==6)
+		{
+			if($value['location']=='F3N(503)' && $value['code']=='TBIL')
+			{
+				
+			}
+			else
+			{ 
+				if($reflex=='yes')
+				{
+					$any_ex_inserted=reflex_testing($sample_id,$value['id']);
+					if($any_ex_inserted>0){$verified=1;}	// if any is inserted, verification require next round of autoverification
+					
+				}
+			}
+		}
+		///////////////ibil
+		if($value['code']=='IBIL')
+		{
+			$ibil=indirect_bilirubin($value['sample_id']);
+			if($ibil=='11')
+			{
+				$error_code_array[]=11;													//11 if >10% diff
+			}
+		}
+
+
+		///////////////LDL
+		if($value['code']=='CHOL')			//CHOL and CHOV go hand in hand
+		{
+			lipid_profile($value['sample_id']);
+		}
+
+		//////total of error to decide if verified(=0)
+		foreach($error_code_array as $error_value)
+		{
+		$verified=$verified+abs($error_value);
+		}
+		
+		if($action=='yes')
+		{
+			///////action
+			error_action($value['sample_id'],$value['code'],$error_code_array,$filename);
+			///////
+		}
+	}
+	
+	////update status
+	if($verified!=0){change_sample_status($sample_id,'verification failed');}
+	else           {change_sample_status($sample_id,'verified');}
+}
+
+////donot change meaning of codes, it is dangerous to PHP code 
+$error_code_text=array(	'-1'=>'mysql error',
+					'-2'=>'not done',
+					'-3'=>'not numeric',
+					'-4'=>'no such record',
+					'0'=>'autoverified',
+					'1'=>'low absurd',
+					'2'=>'high absurd',					
+					'3'=>'low critical',
+					'4'=>'high critical',
+					'5'=>'low abnormal',
+					'6'=>'high abnormal',
+					'7'=>'critical alert not reported',
+					'8'=>'critical alert reporting incomplate',
+					'11'=>'dbil>tbil and differance is more than 10 persant'
+					);
+//'delete_examination'=>'delete examination',
+$error_action_text=array(
+		'1'=>'1. write result manually',																	//for blank results
+		'2'=>'2. Import result',																			//blank results
+		'3'=>'3. Write "Result awaited"',																	//for blank results
+		'5'=>'5. write "not done" and exam. rejection "NOT DONE done because sample inadequate." ',			//for blank results
+		'6'=>'6. write "not done" and exam. rejection "NOT DONE done because lab. resources inadequate." ',	//for blank results
+		'7'=>'7. critical reporting entry'																	//for critical reporting
+		);
+
+function read_action($sample_id,$code,$error_code_array,$filename)
+{
+		global $error_action_text;
+
+		echo '<tr><td>';
+		echo '<form method=post action=\''.$filename.'\' target=_blank >';
+		mk_select_from_array_return_key('action',$error_action_text,'','');
+		echo '<input type=hidden name=code value=\''.$code.'\'>';
+		echo '<button type=submit name=sample_id value=\''.$sample_id.'\'>OK</button>';
+		echo '</form>';
+		echo '</td><tr>';
+}
+
+//autoverification never successful: absurd, dbil>tbil(>10%)						
+function error_action($sample_id,$code,$error_code_array,$filename)
+{
+
+
+	foreach($error_code_array as $error_value)
+	{
+	echo '<table border=3 bordercolor=green>';
+	if($error_value=='-2')																//empty field, software action required
+		{
+			echo '<tr><th>The result field of ['.$sample_id.'] ['.$code.'] is <font color=red>EMPTY</font></th></tr>';
+			read_action($sample_id,$code,$error_code_array,$filename);
+		}
+	elseif($error_value=='1' || $error_value=='2')										//absurd reporting, no software action required
+		{
+			echo '<tr><th>Result of ['.$sample_id.'] ['.$code.'] is <font color=red>ABSURD</font></th></tr>';
+			echo '<tr><th>Repeat examination from new aliquot of primary sample at least twice</th></tr>';
+			echo '<tr><th>Observe primary sample for visible changes of deterioration(Hemolysed, brown colored)</th></tr>';		
+			echo '<tr><th>Observe primary sample container and preservative types, look for sample transposition</th></tr>';
+			echo '<tr><th>is remarks inserted for repeat sample collection?</th></tr>';		
+		}
+	elseif($error_value=='8')																//critical reporting not complate, software action required
+		{
+			echo '<tr><th><font color=red>CRITICAL</font> value reporting of ['.$sample_id.'] ['.$code.'] is incomplate.</th></tr>';
+			read_action($sample_id,$code,$error_code_array,$filename);
+		}
+		
+	elseif($error_value=='11')																//dbil>tbil, no software action required
+		{
+			echo '<tr><th><font color=red>['.$sample_id.'] TBIL less than DBIL</font> with difference more than 10%</th></tr>';
+			echo '<tr><th>Repeat examination. Review BIL results in other samples</th></tr>';			
+			echo '<tr><th>Review QC. examine QC samples again.</th></tr>';
+			echo '<tr><th>Perform manual measurement. Look for color of reaction by naked eye.</th></tr>';
+			echo '<tr><th>Contact deputy technical manager before releasing report.</th></tr>';			
+		}
+	echo '</table>';	
+	}
+	
+	//echo '['.$code;
+	//echo ']';
+	//print_r($error_code_array);
+	//echo '<br>';
+
+}
+
+function read_date_time($type)
+{
+	date_default_timezone_set('Asia/Kolkata');
+	$year=array(strftime('%Y')-1,strftime('%Y'),strftime('%Y')+1);
+	$month=array('01','02','03','04','05','06','07','08','09','10','11','12');
+	$day=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31');
+	$hour=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24');
+	$minute=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','26','27','28','29','30','32','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50','51','52','53','54','55','56','57','58','59','60');
+	$second=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','26','27','28','29','30','32','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50','51','52','53','54','55','56','57','58','59','60');
+
+	if($type>=1)
+	{
+		mk_select_from_array_return_value('year',$year,'',strftime('%Y'));
+	}
+	if($type>=2)
+	{
+		mk_select_from_array_return_value('month',$month,'',strftime('%m'));
+	}	
+	if($type>=3)
+	{
+		mk_select_from_array_return_value('day',$day,'',strftime('%d'));
+	}	
+	if($type>=4)
+	{
+		mk_select_from_array_return_value('hour',$hour,'',strftime('%H'));
+	}	
+	if($type>=5)
+	{
+		mk_select_from_array_return_value('minute',$minute,'',strftime('%M'));
+	}	
+	if($type>=6)
+	{
+		mk_select_from_array_return_value('second',$second,'',strftime('%S'));
+	}	
+}
+
+
+function edit_date_time($type,$d_year,$d_month,$d_day,$d_hour,$d_minute,$d_second)
+{
+	$year=array(strftime('%Y')-1,strftime('%Y'),strftime('%Y')+1);
+	$month=array('01','02','03','04','05','06','07','08','09','10','11','12');
+	$day=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31');
+	$hour=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24');
+	$minute=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','26','27','28','29','30','32','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50','51','52','53','54','55','56','57','58','59','60');
+	$second=array('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','26','27','28','29','30','32','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50','51','52','53','54','55','56','57','58','59','60');
+
+	if($type>=1)
+	{
+		mk_select_from_array_return_value('year',$year,'',$d_year);
+	}
+	if($type>=2)
+	{
+		mk_select_from_array_return_value('month',$month,'',$d_month);
+	}	
+	if($type>=3)
+	{
+		mk_select_from_array_return_value('day',$day,'',$d_day);
+	}	
+	if($type>=4)
+	{
+		mk_select_from_array_return_value('hour',$hour,'',$d_hour);
+	}	
+	if($type>=5)
+	{
+		mk_select_from_array_return_value('minute',$minute,'',$d_minute);
+	}	
+	if($type>=6)
+	{
+		mk_select_from_array_return_value('second',$second,'',$d_second);
+	}		
+}
+
+function get_target($sample_id,$equipment_name,$code)
+{
+//XYYMMDDHH
+//100000000
+//$array=array('target'=>'','sd'=>'');	
+	$link=start_nchsls();
+	$sql=	'select * from qc_target where 
+					equipment_name=\''.$equipment_name.'\' and
+					code=\''.$code.'\' and
+					qc_type=\''.(int)($sample_id/100000000).'\'
+					
+			';
+	//echo $sql;		
+	if(!$result=mysql_query($sql,$link)){return FALSE;}
+	$array=mysql_fetch_assoc($result);
+	return $array;	
+}
+
+
+///only used for  print_sample() to insert comment
+$acr_check_code=array(	'-1'=>'',
+					'-2'=>'',
+					'-3'=>'',
+					'0'=>'',
+					'1'=>'low absurd',
+					'2'=>'high absurd',					
+					'3'=>'low critical',
+					'4'=>'high critical',
+					'5'=>'',
+					'6'=>'');
+					
+function print_sample($sample_id,$Technician,$Doctor)
+{
+global $lab_name,$section_name,$address_phone,$nabl_symbol,$blank_symbol,$nabl_cert_no,$blank_cert_no,$bypass_autoverification;
+$attachment_exist='no';
+$link=start_nchsls();
+$sql_sample_data='select * from sample where sample_id='.$sample_id;
+$sql_examination_data='select * from examination where sample_id=\''.$sample_id.'\' order by name_of_examination';
+global $acr_check_code;
+
+////////find if any one is accredited
+$NABL_acc_counter=0;
+$result_examination_data_for_accr=mysql_query($sql_examination_data,$link);
+while($acc_array=mysql_fetch_assoc($result_examination_data_for_accr))
+{
+	if($acc_array['NABL_Accredited']=='Yes')
+	{
+		$NABL_acc_counter++;
+	}
+}
+if($NABL_acc_counter>0)
+{
+	$symbol=$nabl_symbol;
+	$cert_no=$nabl_cert_no;
+}
+else
+{
+	$symbol=$blank_symbol;
+	$cert_no=$blank_cert_no;
+}
+/////////////////////
+					
+if(mysql_num_rows($result_sample_data=mysql_query($sql_sample_data,$link))>0)
+{
+	$sample_array=mysql_fetch_assoc($result_sample_data);
+
+		echo '
+			<table border=0 style="border-collapse:collapse;">';
+			
+			if(strlen($Doctor)>0)
+			{
+			echo '<tr>
+					<td colspan=20 align=center>
+						<table border=0>
+							<tr><th colspan=20><u><h2>'.$lab_name.'</h2></u></td></tr>
+							<tr><th  colspan=2 align=center>'.$address_phone.'</td></td></tr>
+							<tr>
+								<td>
+									<table border=0>
+									<tr><td align=center ><img src="'.$symbol.'" height="96" width=90" /></td></tr>
+									<tr><td width=10 align="center"><font size="1">'.$cert_no.'</font></td></tr>
+									</table>
+								</td>
+								<td>
+									<table border=0>
+									<tr><th halign=center>Laboratory Examination Report</th></tr>
+									<tr><th align=center>'.$section_name.'</th></tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>';
+				}
+				else
+				{
+					echo '<tr><th colspan=10><font color=red>THIS IS NOT A REPORT. DO NOT PRINT</font></th></tr>';
+				}
+				
+				echo '<tr style="border:1px solid #000;">
+								<td>
+									<table border=0>
+										<tr><td><b>Patient Name</b></td><td>'.$sample_array['patient_name'].'</td></tr>
+										<tr><td><b>MRD Number</b></td><td>'.$sample_array['patient_id'].'</td></tr>
+									</table>
+								</td>	
+								<td align=right>
+									<table border=0>
+										<tr><td><b>'.$sample_array['clinician'].'</td><td><b>Unit:</b>'.$sample_array['unit'].'</td></tr>
+										<tr><td><b>Ward/OPD</b></td><td>'.$sample_array['location'].'</td></tr>
+									</table>
+								</td>						
+				</tr>
+
+				<tr style="border:1px solid #000;">
+								<td>
+									<table border=0>
+										<tr><td style=\'font-size:150%\'>Sample ID:<b>'.$sample_array['sample_id'].'</b>(';
+
+//comment line below when bypassing autoverification										
+										echo $sample_array['status'];
+										
+										echo ')</td></tr>
+										<tr><td><b>'.$sample_array['sample_details'].'</b></td></tr>
+									</table>
+								</td>	
+								<td align=right>
+									<table border=0>
+										<tr><td><b>Sample Type:</b>'.$sample_array['sample_type'].'</td></tr>
+										<tr><td><b>Preservative:</b>'.$sample_array['preservative'].'</td></tr>
+									</table>
+								</td>						
+				</tr>';
+			
+				echo '
+							<tr  style="border:1px solid #000;"><td colspan=3><b>Collection time/Diagnosis/Age/Sex:</b>'.$sample_array['sample_collection_time'].'</b></td></tr>
+							<tr  style="border:1px solid #000;"><td><b>Receipt Time:</b>'.$sample_array['sample_receipt_time'].'</td><td align=right><b>Report time:</b>'.strftime('%Y-%m-%d %H:%M:%S').'</td></tr>
+													
+			';
+
+
+		if(mysql_num_rows($result_examination_data=mysql_query($sql_examination_data,$link))>0)
+		{
+				//<table border=0 RULES=COLS FRAME=BOX style="border-collapse:collapse;  margin-top:50px">
+			echo '
+				<tr><td colspan=2>
+				<table border=1 style="border-collapse:collapse;  margin-top:50px">
+						<tr>
+							<th>Accr.</th>
+							<th>Examination</th>
+							<th>Result</th>
+							<th>Ref.R</th>
+							<th>Alert</th>
+							<th>Method</th>
+						</tr>';
+						
+			while($examination_array=mysql_fetch_assoc($result_examination_data))
+			{
+				if($examination_array['id']<1000)
+				{
+					echo '<tr>';
+					echo '<td>'.$examination_array['NABL_Accredited'].'</td>';
+					echo '<td>'.$examination_array['name_of_examination'].'</td>';
+					echo '<td>'.$examination_array['result'].'</td>';
+					echo '<td>'.$examination_array['referance_range'].' '.$examination_array['unit'].'</td>';
+					echo '<td>';
+					echo $acr_check_code[check_critical_abnormal_reportable($examination_array['sample_id'],$examination_array['code'])];
+					echo '</td>';
+					echo '<td>'.$examination_array['method_of_analysis'].'</td>';
+					//echo '<td>'.$examination_array['details'].'</td>';
+					echo '</tr>';		
+				}
+				elseif($examination_array['id']>=1000)
+				{
+					if($examination_array['id']==1008){$attachment_exist='yes';}
+					echo '
+						<tr>
+							<td colspan="10" >
+								<table border=0>
+									<tr>
+					<tr><td><b>'.trim($examination_array['name_of_examination'],'Z_').':</b></td><td>'.$examination_array['result'].'</td></tr>
+									</tr>
+								</table>	
+							</td>
+						</tr>';
+				}
+			}
+			echo '<tr><th colspan=20>The tests marked with \'No\' in the first column are not accredited by NABL</th></tr>';
+
+			echo '</table>';
+		}	
+			
+				
+			echo '	<tr>
+						<td colspan=24 align=center>
+							<table border=1 style="border-collapse:collapse;  margin-top:50px">
+								<tr>
+									<td>Sign:</td></td><td width=200></td><td rowspan=2 width=150></td>
+									<td>Sign:</td><td width=200></td>
+								</tr>
+								
+								<tr>
+									<td align=center colspan=2>'.$Technician.'</td>
+									<td   align=center colspan=2>'.$Doctor.'</td>
+								</tr>
+								
+							</table>								
+						</td>
+					</tr>
+						';	
+		
+			if($attachment_exist=='no')
+			{
+			echo '<tr><th align=center colspan=6>-----Kindly ask for S.Lithium and S.Cholinesterase-----</th></tr>';
+			echo '<tr><td align=center colspan=6>-----End of Report-----</td></tr>';	
+			}
+			echo '</table>';
+			
+			if($attachment_exist=='yes')
+			{
+				echo '<h2 style="page-break-before: always;"></h2>';
+				print_attachment($sample_id);				
+			}
+			//return TRUE;
+
+}
+else
+{
+	return FALSE;
+}
+}
+
+function print_examinations_tt($sample_id)
+{
+	$link=start_nchsls();
+
+	$sql='select 
+					sample.sample_id, code,
+					sample_receipt_time as Received ,
+					substr(examination.details,1,19) as Analysis_complated, 
+					timediff(substr(examination.details,1,19),sample_receipt_time) as TAT 
+				from 
+					sample,examination 
+				where 
+					sample.sample_id=examination.sample_id 
+					and 
+					sample.sample_id=\''.$sample_id.'\'';
+	$result=mysql_query($sql,$link);
+	echo mysql_error();
+	if(mysql_num_rows($result)>0)
+	{
+		echo '<table border=1 bgcolor=lightblue>';
+		echo '<tr><td>Sample ID</td><td>Code</td><td>Received</td><td>Analysis complated</td><td>TAT(h:m:s)</td></tr>';
+		while($ar=mysql_fetch_assoc($result))
+		{
+			echo '<tr><td>'.$ar['sample_id'].'</td><td>'.$ar['code'].'</td><td>'.$ar['Received'].'</td><td>'.$ar['Analysis_complated'].'</td><td>'.$ar['TAT'].'</td></tr>';
+		}
+	}
+}
+
+/*
+
+function print_examinations_tt($sample_id)
+{
+	$link=start_nchsls();
+
+	$sql_tt='select sample_receipt_time from sample where sample_id=\''.$sample_id.'\'';
+	$sql='select id,name_of_examination,details,result,unit,referance_range from examination where sample_id=\''.$sample_id.'\' order by name_of_examination';
+
+	//echo $sql_tt;
+	$result_tt=mysql_query($sql_tt,$link);
+	$sample_r_t=mysql_fetch_assoc($result_tt);
+	$sample_receipt_time=$sample_r_t['sample_receipt_time'];
+
+	if(mysql_num_rows($result=mysql_query($sql,$link))>0)
+	{
+	echo '<table border=1 bgcolor=lightblue>';
+	echo '<tr><td>sample_id</td><td>Examination</td><td>turnaround time(Hours)</td></tr>';
+
+		//$rcount=0;
+		//  $tr='<tr>';
+		
+	while($ar=mysql_fetch_assoc($result))
+	{
+		if($ar['id']<1000)
+		{
+			$tat=find_turnaround_time($sample_id,$ar['id']);
+			if($tat!=FALSE)
+			{
+				echo '<tr><td>'.$sample_id.'</td><td>'.$ar['name_of_examination'].'</td><td>'.$tat.'</td></tr>';
+			}
+			else
+			{
+				echo '<tr><td>'.$sample_id.'</td><td>'.$ar['name_of_examination'].'</td><td>NA</td></tr>';
+			}
+		}
+	}
+
+	}
+}
+
+*/
+
+function find_turnaround_time($sample_id,$id)
+{
+$link=start_nchsls();
+
+$sql_tt='select sample_receipt_time from sample where sample_id=\''.$sample_id.'\'';
+$sql='select id,name_of_examination,details,result,unit,referance_range from examination where sample_id=\''.$sample_id.'\' and id=\''.$id.'\'';
+
+//echo $sql_tt;
+$result_tt=mysql_query($sql_tt,$link);
+$sample_r_t=mysql_fetch_assoc($result_tt);
+$sample_receipt_time=$sample_r_t['sample_receipt_time'];
+
+if(mysql_num_rows($result=mysql_query($sql,$link))>0)
+{
+while($ar=mysql_fetch_assoc($result))
+{
+	if($ar['id']<1000)
+	{
+		$ex=explode('|',$ar['details']);
+		$tt=get_time_difference($sample_receipt_time, $ex[0]);
+		//print_r($tt);
+		if($tt!=FALSE)
+		{
+			return $tt_in_hours=ceil($tt['days']*24+$tt['hours']+($tt['minutes']/60));
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+}
+
+}
+}
+
+function get_time_difference( $start, $end )
+{
+    $uts['start']      =    strtotime( $start );
+    $uts['end']        =    strtotime( $end );
+    if( $uts['start']!==-1 && $uts['end']!==-1 )
+    {
+        if( $uts['end'] >= $uts['start'] )
+        {
+            $diff    =    $uts['end'] - $uts['start'];
+            if( $days=intval((floor($diff/86400))) )
+                $diff = $diff % 86400;
+            if( $hours=intval((floor($diff/3600))) )
+                $diff = $diff % 3600;
+            if( $minutes=intval((floor($diff/60))) )
+                $diff = $diff % 60;
+            $diff    =    intval( $diff );            
+            return( array('days'=>$days, 'hours'=>$hours, 'minutes'=>$minutes, 'seconds'=>$diff) );
+        }
+        else
+        {
+            return FALSE;//trigger_error( "Ending date/time is earlier than the start date/time", E_USER_WARNING );
+        }
+    }
+    else
+    {
+        return FALSE;//trigger_error( "Invalid date/time data detected", E_USER_WARNING );
+    }
+    return( false );
+}
+
+
+function create_file($str,$sample_id,$attachment_id,$filetype)
+{
+	$filename='tmp/'.$sample_id.'-'.$attachment_id.'.'.$filetype;
+	$fp=fopen($filename,'w+');
+	fwrite($fp,$str);
+	return $filename;
+}
+
+function print_single_attachment($array)
+{
+	echo '<table>';
+	echo '<tr><td>(This attachment is invalid for clinical use unless accompanied by main report)</td></tr>';
+	echo '<tr><th colspan=10 align=left>Attachment of sample_id='.$array['sample_id'].' and patient_id='.get_patient_id($array['sample_id']).'</th></tr>';
+	echo '<tr><th colspan=10  align=left>Attachment:'.$array['attachment_id'].'</th></tr>';
+	echo '<tr><th colspan=10  align=left>Description:'.$array['description'].'</th></tr>';
+	$filetype=$array['filetype'];
+	if($filetype=='jpeg' || $filetype=='jpg' || $filetype=='gif')
+	{
+		$filename=create_file($array['file'],$array['sample_id'],$array['attachment_id'],$array['filetype']);
+		echo '<tr><td><img src="'.$filename.'" height=500 width=500></td></tr>';	
+	}
+	elseif($filetype=='txt')
+	{
+		echo '<tr><td><pre>'.htmlspecialchars($array['file']).'</pre></td></tr>';
+	}
+	else
+	{
+		echo '	<tr>
+		<td>cannot display</td>
+		</tr>';
+	}			
+	echo '</table>';
+	
+}
+function print_attachment($sample_id)
+{
+	$sql='select * from attachment where sample_id=\''.$sample_id.'\'';
+	//echo $sql;
+	$link=start_nchsls();
+	if(!$result=mysql_query($sql,$link)){return FALSE;}
+	$number_of_attachment=mysql_num_rows($result);
+	$counter=1;
+	while($array=mysql_fetch_assoc($result))
+	{
+		print_single_attachment($array);
+		if($counter==$number_of_attachment)
+		{
+			echo '<tr><td align=center colspan=6>-----End of Report-----</td></tr>';
+		}
+		else
+		{
+			echo '<h2 style="page-break-before: always;"></h2>';
+			$counter++;
+		}
+	}
+}
+
+
+function view_data($id)
+{
+	$link=start_nchsls();
+
+	if(!$result_id=mysql_query('select * from view_data where id=\''.$id.'\'',$link)){echo mysql_error();}
+	$array_id=mysql_fetch_assoc($result_id);
+	
+	$sql=$array_id['sql'];
+	$info=$array_id['info'];
+		
+	$first_data='yes';
+	
+	if(!$result=mysql_query($sql,$link)){echo mysql_error();}
+	echo '<table border=1><tr><th colspan=20 bgcolor=lightblue>'.$info.'</th></tr>';
+	
+	$first_data='yes';
+	
+	while($array=mysql_fetch_assoc($result))
+	{
+		if($first_data=='yes')
+		{
+			echo '<tr bgcolor=lightgreen>';
+			foreach($array as $key=>$value)
+			{
+				echo '<th>'.$key.'</hd>';
+			}
+			echo '</tr>';
+			$first_data='no';
+		}
+		foreach($array as $key=>$value)
+		{
+			echo '<td>'.$value.'</td>';
+		}
+		echo '</tr>';
+
+	}
+	echo '</table>';
+}
+
+function view_data_sql($sql)
+{
+	$link=start_nchsls();
+
+	if(!$result_id=mysql_query($sql,$link)){echo mysql_error();}
+	$array_id=mysql_fetch_assoc($result_id);
+	
+	$first_data='yes';
+	
+	if(!$result=mysql_query($sql,$link)){echo mysql_error();}
+	echo '<table border=1>';
+	
+	$first_data='yes';
+	
+	while($array=mysql_fetch_assoc($result))
+	{
+		if($first_data=='yes')
+		{
+			echo '<tr bgcolor=lightgreen>';
+			foreach($array as $key=>$value)
+			{
+				echo '<th>'.$key.'</hd>';
+			}
+			echo '</tr>';
+			$first_data='no';
+		}
+		foreach($array as $key=>$value)
+		{
+			echo '<td><pre>'.$value.'</pre></td>';
+		}
+		echo '</tr>';
+
+	}
+	echo '</table>';
+}
+
+function count_cron()
+{
+	$link=start_nchsls();
+	$sql='select * from reminder';
+	$result=mysql_query($sql,$link);
+	return mysql_num_rows($result);
+}
+
+//blob can not be attached during insertion, it must be edited
+function manage_blob($database,$tablename,$primary_key_array,$attachment_id)
+{
+	echo '<form method=post action=manage_blob.php>';
+	echo '<button type=submit name=action value=manage_blob>Manage Attachment</button>';
+	echo '<input type=hidden name=_database value=\''.$database.'\'>';
+	echo '<input type=hidden name=_tablename value=\''.$tablename.'\'>';
+	
+	foreach($primary_key_array as $key=>$value)
+	{
+		echo '<input type=hidden name=\'_pri_'.$key.'\' value=\''.$value.'\'>';
+	}
+	
+	echo '<input type=hidden name=_attachment_id value=\''.$attachment_id.'\'>';
+	echo '</form>';
+}
+
+
+
+?>

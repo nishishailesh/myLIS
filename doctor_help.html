@@ -1,0 +1,56 @@
+<head>
+<style>
+index{color:red;}
+que {color:green;}
+ans {color:black;}
+</style>
+</head>
+<body>
+	
+<h4><index>Q1. I want report of sample_id 2345</index></h4>
+<h4><index>Q2. I want report of sample_id from 2345 to 2350</index></h4>
+<h4><index>Q3. I want report of MRD No SUR/12/0000123</index></h4>
+<h4><index>Q4. I want report of 'Maganbhai' admitted in Medicine Unit-6</index></h4>
+<h4><index>Q5. Report says that "Sample ID XXXX is not verified(Call the lab)"</index></h4>
+
+<h1>Tick mark only those boxes which you wish to include in search.</h4>
+<h4><que>A1. I want report of sample_id 2345</que></h1>
+<h4><pre><ans>	write "2345" in [from_sample_id] box. 
+	tickmark its checkbox(blue,left side). 
+	click [print]</ans></pre></h4>
+
+<h4><que>A2. I want report of sample_id from 2345 to 2350</que></h4>
+<h4><pre><ans>	write "2345" in [from_sample_id] box. 
+	tickmark its checkbox(blue,left side). 
+	
+	write "2350" in [to_sample_id] box. 
+	tickmark its checkbox(blue,left side).
+	 	
+	click [print]</ans></pre></h4>
+	
+<h4><que>A3. I want report of MRD No SUR/12/0000123</que></h4>
+<h4><pre><ans>	write "SUR/12/0000123" in [patient_id] box. 
+	tickmark its checkbox
+	
+	click [print]</ans></pre></h4>
+
+<h4><que>A4. I want report of 'Maganbhai' admitted in Medicine Unit-6</que></h4>
+<h4><pre><ans>	write "Magan%" in [patient_name] box. 
+	tickmark its checkbox(blue,left side). 
+	
+	select "Medicine" in [clinician] box. 
+	tickmark its checkbox
+	
+	select "6" in [unit] box. 
+	tickmark its checkbox	
+	click [print]
+	
+	The reports of "Magan", "Maganbhai", "Maganlal", "Maganbhai Desai" will be shown.
+	note use of % to include all choices.</ans></pre></h4>
+<h4><que>A5. Report says that "Sample ID XXXX is not verified(Call the lab)"</que></h4>
+<h4><pre><ans>	The report may have failed verification process. 
+	It is best to get such report-print from the lab
+	
+</ans></pre></h4>
+</body>
+
