@@ -69,11 +69,9 @@ function main_menu()
 	<table border=0><tr><td>
 	<div id="navbar">
 	<ul>
-	<li onfocus="sfHover()"><a href="#">New</a>
+	<li><a href="#">New</a>
 		<ul>
 			<li><a href=new_request.php>New</a>
-			<li><a href=new_request_FS.php>New Copy[F-S]</a>
-			<li><a href=new_request_barcode_general_option2_OPD.php>New New OPD Blood(S,P)</a>
 			<li><a href=new_request_barcode_general_option2.php>New General</a>
 			<li><a href=request_report.php>Request Report</a>
 		</ul>
@@ -490,7 +488,8 @@ function edit_examination($sample_id,$filename,$disabled)
 			{
 					if($key=='result')
 					{
-						echo '<td nowrap><input type=text '.$disabled.' name=\''.$ar['id'].'\' value=\''.$value.'\'></td>';
+						//echo '<td nowrap><input type=text '.$disabled.' name=\''.$ar['id'].'\' value=\''.$value.'\'></td>';
+						echo '<td nowrap><textarea '.$disabled.' name=\''.$ar['id'].'\'>'.$value.'</textarea></td>';
 					}
 					else
 					{
@@ -1945,7 +1944,26 @@ class MYPDF_NABL extends TCPDF {
 		$y_counter=40;
 
 		$this->Line(10,$y_counter,200,$y_counter);
+
+/*		
+		$y_counter=$y_counter+1;
+		$this->SetFont('courier', 'B', 15);
+		$this->SetXY(10,$y_counter);
+		$this->Cell(190, $h=0, $txt=$this->section_name, $border=0, $ln=0, $align='C', $fill=false, $link='', $stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
 		
+		$y_counter=$y_counter+5;
+		$this->SetFont('courier', '', 15);
+		$this->SetXY(10,$y_counter);
+		$this->Cell(190, $h=0, $txt=$this->section_address_phone, $border=0, $ln=0, $align='C', $fill=false, $link='', $stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
+*/
+
+//Biochemisty Header
+		if(mysql_num_rows($result_sample_data=mysql_query($sql_sample_data,$linkk))>0)
+		{
+			$border=0;
+			$sample_array=mysql_fetch_assoc($result_sample_data);	
+			$this->section_name=$sample_array['section'];
+			
 		$y_counter=$y_counter+1;
 		$this->SetFont('courier', 'B', 15);
 		$this->SetXY(10,$y_counter);
@@ -1956,11 +1974,9 @@ class MYPDF_NABL extends TCPDF {
 		$this->SetXY(10,$y_counter);
 		$this->Cell(190, $h=0, $txt=$this->section_address_phone, $border=0, $ln=0, $align='C', $fill=false, $link='', $stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
 
-//Biochemisty Header
-		if(mysql_num_rows($result_sample_data=mysql_query($sql_sample_data,$linkk))>0)
-		{
-			$border=0;
-			$sample_array=mysql_fetch_assoc($result_sample_data);
+			
+			
+			
 			$this->sample_type=$sample_array['sample_type'];
 			$this->SetFont('courier', 'B', 15);
 //1		
@@ -2207,10 +2223,22 @@ function print_report_pdf_A4($sample_id_array,$doctor)
 				$pdf->Cell($w=40, $h=0, $examination_array['name_of_examination'],$border, $ln=0, $align='', $fill=false, $link='', 
 					$stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
 
+/*
 				$pdf->SetXY(60,$counter);
-				$pdf->Cell($w=40, $h=0, $examination_array['result'],$border, $ln=0, $align='', $fill=false, $link='', 
+				$pdf->Cell($w=40, $h=0, $examination_array['result'],$border, $ln=0, $align='', $fill=false,
+				 $link='', 
 					$stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
+*/
+				$pdf->SetXY(60,$counter);
+//				$pdf->Cell($w=40, $h=0, $examination_array['result'],$border, $ln=0, $align='', $fill=false, $link='', 
+//					$stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
+	//public function MultiCell($w, $h, $txt, $border=0, $align='J', $fill=false, $ln=1, $x='', $y='', $reseth=true, $stretch=0, $ishtml=false, $autopadding=true, $maxh=0, $valign='T', $fitcell=false) {
+				$pdf->MultiCell($w=100, $h=0, $examination_array['result'], $border, 
+							$align='', $fill=false, $ln=1, 
+							$x=$pdf->GetX(), $pdf->GetY(), $reseth=true, $stretch=0, $ishtml=false, 
+							$autopadding=true, $maxh=0, $valign='T', $fitcell=false);
 
+/*
 				$pdf->SetXY(100,$counter);
 				$pdf->Cell($w=40, $h=0, $examination_array['referance_range'].' '.$examination_array['unit'],$border, $ln=0, $align='', $fill=false, $link='', 
 					$stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
@@ -2223,6 +2251,8 @@ function print_report_pdf_A4($sample_id_array,$doctor)
 				$pdf->SetXY(160,$counter);					
 				$pdf->Cell($w=40, $h=0,$examination_array['method_of_analysis'],$border, $ln=0, $align='', $fill=false, $link='', 
 					$stretch=1, $ignore_min_height=false, $calign='T', $valign='M');
+*/					
+					
 				if($counter>=260){$counter=$pdf->header_y+5;$pdf->AddPage();}
 				//148=120+28 297=270+27
 			}

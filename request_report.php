@@ -63,7 +63,6 @@ function prepare_report($from,$to)
 		if($section!=$prev_section && $start=='no')
 		{
 			echo '</table>';
-			echo '<h2>End of '.$prev_section.'</h2>';
 			echo '<h2 style="page-break-before: always;"></h2>';
 			echo '<table border=1 style="border-collapse:collapse;">';
 			echo '<th colspan=10>'.$section.'</th>';
@@ -81,7 +80,7 @@ function prepare_report($from,$to)
 		if($start=='yes')
 		{
 			$start='no';
-			//echo '<h2 style="page-break-before: always;"></h2>';
+			echo '<h2 style="page-break-before: always;"></h2>';
 			echo '<table border=1 style="border-collapse:collapse;">';
 			echo '<th colspan=10>'.$section.'</th>';
 			echo '<tr>	<th>section</th>
@@ -108,7 +107,7 @@ function prepare_report($from,$to)
 		$prev_section=$section;
 	}
 	echo '</table>';
-	echo '<h2>End of '.$section.'</h2>';
+
 }
 if(!login_varify())
 {
