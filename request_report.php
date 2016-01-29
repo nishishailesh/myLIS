@@ -6,11 +6,11 @@ echo '<head>';
 echo '</head>';
 echo '<body>';
 
-/*
+
 echo '<pre>';
 print_r($GLOBALS);
 echo '</pre>';
-*/
+
 
 include 'common.php';
 
@@ -49,7 +49,7 @@ function prepare_report($from,$to)
 {
 	
 	$link=start_nchsls();
-	$sql='select * from sample where sample_id between \''.$from.'\' and \''.$to.'\' order by section,request_id,sample_id';
+	$sql='select * from sample where request_id between \''.$from.'\' and \''.$to.'\' order by section,request_id,sample_id';
 
 	$result=mysql_query($sql,$link);
 	
@@ -124,7 +124,7 @@ main_menu();
 
 else
 {
-	//echo 'preparing to print requests from '.$_POST['from'].' to '.$_POST['to'];
+	echo 'preparing to print requests from '.$_POST['from'].' to '.$_POST['to'];
 	prepare_report($_POST['from'],$_POST['to']);
 	
 }

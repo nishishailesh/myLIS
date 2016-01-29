@@ -10,6 +10,26 @@ if barcode not working, write full everywhere except epindorf cups
 
 Keep manual entry option in saparate PHP
 
+
+id
+	mrd				SUR/15/00002345
+	sample id		
+					     1-100000 BI-Ward
+					100001-200000 BI-OPD 
+					200001-300000 CP
+									200001-250000 OPD
+									250001-300000 Ward
+					300001-400000 HI
+					400001-500000 HP
+					500001-600000 CP
+					600001-700000 BC
+					700001-800001 SR
+
+	examination id	
+	
+After a month
+       YYMMXXXXXX (10 Digits)
+	
 */
 
 
@@ -210,8 +230,28 @@ $sample_type='Blood(Serum,Plasma)';
 $location='OPD';
 $unit='-';
 
+
+/*
 function find_next_sample_id($location)
 {
+
+//sample_id allocation policy
+//Section specific, if asked by section
+//Ward-vs-OPD specific, if asked by section
+//
+
+
+	$sample_id_allocation=array(
+							'BIO'=>array('Ward'=>array(0,100000),'OPD'=>(100001,200000)),
+							 'CP'=>array('Ward'=>array(200000,250000),'OPD'=>(250000,300000)),							
+							 'HEM'=>array('Ward'=>array(300000,350000),'OPD'=>(350000,400000)),	
+							 'HIST'=>array('Ward'=>array(400000,450000),'OPD'=>(450000,500000)),	
+							 'CYTO'=>array('Ward'=>array(500000,550000),'OPD'=>(550000,600000)),	
+							 'BEC'=>array('Ward'=>array(600000,650000),'OPD'=>(650000,700000)),	
+							 'SER'=>array('Ward'=>array(600000,650000),'OPD'=>(650000,700000)),	
+								);
+	
+	//$ym will decide if sample_id is 10 digits or not (YYMMXXXXXX)
 	$ym=0;
 	//$ym=date("ym")*1000000;
 	//echo 'year and date string='.$ym.'<br>';
@@ -261,7 +301,98 @@ function find_next_sample_id($location)
 	}
 	return $next_sample_id;
 }
+*/
 
+
+//http://127.0.0.1/alllab/new_request_barcode_general_option2.php
+//http://127.0.0.1/alllab/new_request_barcode_general_option2.php
+
+function find_next_sample_id($section,$location)
+{
+//echo 'hi';
+//sample_id allocation policy
+//Section specific, if asked by section
+//Ward-vs-OPD specific, if asked by section
+//
+
+
+	$sample_id_allocation=array(
+							'BIO'=>array('Ward'=>array(0,100000),'OPD'=>array(100001,200000)),
+							 'CP'=>array('Ward'=>array(200000,250000),'OPD'=>array(250000,300000)),							
+							 'HE'=>array('Ward'=>array(300000,350000),'OPD'=>array(350000,400000)),	
+							 'HP'=>array('Ward'=>array(400000,450000),'OPD'=>array(450000,500000)),	
+							 'CY'=>array('Ward'=>array(500000,550000),'OPD'=>array(550000,600000)),	
+							 'BEC'=>array('Ward'=>array(600000,650000),'OPD'=>array(650000,700000)),	
+							 'SER'=>array('Ward'=>array(600000,650000),'OPD'=>array(650000,700000)),
+							 'SK'=> array('Ward'=>array(700000,750000),'OPD'=>array(750000,800000)),
+							 'IHBT'=>array('Ward'=>array(800000,850000),'OPD'=>array(850000,900000)),	 	
+								);
+	
+	//$ym will decide if sample_id is 10 digits or not (YYMMXXXXXX)
+	$ym=0;
+	//$ym=date("ym")*1000000;
+	//echo 'year and date string='.$ym.'<br>';
+	
+	/*
+	if($location!='OPD')
+	{
+		$first_sample_id=$ym+0;
+		$last_most_sample_id=$ym+99999;
+	}
+	else
+	{
+		$first_sample_id=$ym+100000;
+		$last_most_sample_id=$ym+200000;
+	}
+	*/
+
+	//$first_sample_id=$sample_id_allocation[$section][$location];
+		
+	if($location!='OPD')
+	{
+		$first_sample_id=$sample_id_allocation[$section]['Ward'][0];
+		$last_most_sample_id=$sample_id_allocation[$section]['Ward'][1];
+	}
+	else
+	{
+		$first_sample_id=$sample_id_allocation[$section]['OPD'][0];
+		$last_most_sample_id=$sample_id_allocation[$section]['OPD'][1];
+	}	
+	
+	//echo 'first_sample_id='.$first_sample_id.'<br>';
+	//echo 'last_most_sample_id='.$last_most_sample_id.'<br>';
+	$sql='select max(sample_id) msi from sample 
+				where 
+					sample_id>\''.$first_sample_id.'\' and 
+					sample_id<\''.$last_most_sample_id.'\'';
+	//echo $sql.'<br>';
+	$link=start_nchsls();
+	$result=mysql_query($sql,$link);
+	if($result===FALSE)
+	{
+		echo 'new_request_barcode_general_option2.php, find_next_sample_id:'.mysql_error().'<br>';
+		return FALSE;
+	}
+	else
+	{
+		$max_id_array=mysql_fetch_assoc($result);
+		//print_r($max_id_array);echo '<br>';
+		$last_sample_id=$max_id_array['msi'];
+		//echo 'last_sample_id='.$last_sample_id.'<br>';
+
+		if($last_sample_id===NULL)
+		{
+			$next_sample_id=$first_sample_id+1;
+			//echo 'next_sample_id='.$next_sample_id.'<br>';
+		}
+		else
+		{
+			$next_sample_id=$last_sample_id+1;
+			//echo 'next_sample_id='.$next_sample_id.'<br>';
+		}
+	}
+	return $next_sample_id;
+}
 
 function list_department()
 {
@@ -1010,6 +1141,8 @@ function find_required_tubes($requested_examination)
 	}
 }
 
+
+/*
 function confirm_next_sample_id($location)
 {
 	$sample_id=find_next_sample_id($location);
@@ -1024,6 +1157,23 @@ function confirm_next_sample_id($location)
 		return $sample_id;
 	}
 }
+*/
+
+function confirm_next_sample_id($section,$location)
+{
+	$sample_id=find_next_sample_id($section,$location);
+	$link=start_nchsls();
+	if(! mysql_query('insert into sample (sample_id) values (\''.$sample_id.'\')',$link))
+	{
+		echo 'confirm_next_sample_id() '.mysql_error().'<br>';
+		return FALSE;
+	}
+	else
+	{
+		return $sample_id;
+	}
+}
+
 
 function get_scope_info($ex_id)
 {	
@@ -1036,9 +1186,10 @@ function get_scope_info($ex_id)
 
 //sample_id=YYMMxxxxxx
 //separate section=separate tube
+
 function insert_required_samples($post)
 {
-	//echo $post['selected_ex'];
+	echo $post['selected_ex'];
 	//$selected_ex=explode('|',$post['selected_ex']);
 	
 	$required_sample=array();
@@ -1067,8 +1218,8 @@ function insert_required_samples($post)
 		{
 				foreach($sample_type_value as $preservative=>$preservative_value)
 				{
-						//echo 'insert a sample:'.$section.'-'.$sample_type.'-'.$preservative.'-'.$value.'<br>';
-						$sample_id=confirm_next_sample_id($post['selected_location']);
+						echo 'insert a sample:'.$section.'-'.$sample_type.'-'.$preservative.'-'.$value.'<br>';
+						$sample_id=confirm_next_sample_id($section, $post['selected_location']);
 						if($sample_id===FALSE)
 						{
 							echo 'can not allocate sample_id: insert_required_samples($post)';
@@ -1299,7 +1450,6 @@ echo  '<script  type="text/javascript">
 			{
 					
 				$sql_ex='select * from scope where 
-								id<1000 and
 								section=\''.$section['section'].'\'	and
 								sample_type=\''.$array_stp['sample_type'].'\' and
 								preservative=\''.$array_stp['preservative'].'\'';
@@ -1398,6 +1548,7 @@ if(isset($_POST['action']))
 	{
 		echo '<div id=sample_list_box></div>';
 		
+
 		if(insert_required_samples($_POST)===FALSE)
 		{
 			echo "<h3>Something was not selected/filled at all. Re enter</h3><br>";
