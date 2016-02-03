@@ -7,10 +7,11 @@ echo '</head>';
 echo '<body>';
 
 
+/*
 echo '<pre>';
 print_r($GLOBALS);
 echo '</pre>';
-
+*/
 
 include 'common.php';
 
@@ -32,24 +33,33 @@ function read_from_to()
 function get_all_ex($sample_id)
 {
 	$link=start_nchsls();
-	$sql='select code from examination where sample_id=\''.$sample_id.'\'';
+	$sql='select code,note from examination where sample_id=\''.$sample_id.'\'';
 
 	$result=mysql_query($sql,$link);
 	
 	$ex_str='';
+	$note_str='';
 	
 	while($ex=mysql_fetch_assoc($result))
 	{
 		$ex_str=$ex_str.','.$ex['code'];
+		$note_str=$note_str.$ex['note'];
 	}
-	return $ex_str;
+	return array($ex_str,$note_str);
 	
 }
+
 function prepare_report($from,$to)
 {
 	
 	$link=start_nchsls();
-	$sql='select * from sample where request_id between \''.$from.'\' and \''.$to.'\' order by section,request_id,sample_id';
+	$sql='select * from sample 
+				where 
+						request_id between \''.$from.'\' and \''.$to.'\' 
+						and
+						sample_id between 1 and 999999
+				order by 
+						section,request_id,sample_id';
 
 	$result=mysql_query($sql,$link);
 	
@@ -101,8 +111,10 @@ function prepare_report($from,$to)
 					<td>'.$sample_array['patient_name'].'</td>
 					<td>'.$sample_array['patient_id'].'</td>
 					<td>'.$sample_array['clinician'].'/'.$sample_array['unit'].'/'.$sample_array['location'].'</td>
-					<td>'.$all_ex.'</td>
-					<td><pre>'.$sample_array['extra'].'</pre></td>
+					<td>'.$all_ex[0].'</td>
+					<td><pre>'.$sample_array['extra'].'</pre>
+					<td><pre>'.$all_ex[1].'</pre>					
+					</td>
 				</tr>';			
 		$prev_section=$section;
 	}
@@ -124,7 +136,7 @@ main_menu();
 
 else
 {
-	echo 'preparing to print requests from '.$_POST['from'].' to '.$_POST['to'];
+	//echo 'preparing to print requests from '.$_POST['from'].' to '.$_POST['to'];
 	prepare_report($_POST['from'],$_POST['to']);
 	
 }

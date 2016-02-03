@@ -161,65 +161,6 @@ function my_radio(id,classs,hiddenn){
     
 </script>';
 
-/*
- * 
-border-color: black;
-  border-style: solid;
-  background: yellow;
-
-		alert(id+hiddenn);
-	
-	if(document.getElementById(id).innerHTML == "<h5>"+examination+"</h5>"+method)
-	{
-		document.getElementById(id).innerHTML = "<h1>"+examination+"</h1>"+method;
-
-		all_department[x].style.backgroundColor = "white";
-
-		document.getElementById(x).value="yes";
-
-	}
-	else
-	{
-		document.getElementById(id).innerHTML = "<h5>"+examination+"</h5>"+method;
-		document.getElementById(x).value="no";
-	}
-
- 
-document.getElementById(id).style.backgroundColor="pink";
-	document.getElementById(hiddenn).value=document.getElementById(id).textContent;
-
-function my_radio(id,class,hidden){
-	all_department = document.getElementsByClassName(class);
-	for(var x=0;x<all_department.length;x++){
-		all_department[x].innerHTML = "<h5>"+all_department[x].textContent+"</h5>";
-    }
-
-	document.getElementById(id).innerHTML= "<h2 style=\"background:lightpink;\">"+document.getElementById(department).textContent+"</h2>";
-	document.getElementById(hidden).value=document.getElementById(id).textContent;
-}
-
-
-
-
-<button onclick="togglee('pppp')">XX</button>
-<div><input id=pppp style="display:none;" type=text></div>
-
-
-if(document.getElementById(id).style.display == "none")
-	{
-		document.getElementById(id).style.display = "block";
-		
-	}
-	else if(document.getElementById(id).style.display == "block")
-	{
-		document.getElementById(id).style.display = "none";
-
-	}	
-
-
-
-
-*/
 
 echo '</head>';
 echo '<body>';
@@ -231,122 +172,27 @@ $location='OPD';
 $unit='-';
 
 
-/*
-function find_next_sample_id($location)
-{
 
-//sample_id allocation policy
-//Section specific, if asked by section
-//Ward-vs-OPD specific, if asked by section
-//
-
-
-	$sample_id_allocation=array(
-							'BIO'=>array('Ward'=>array(0,100000),'OPD'=>(100001,200000)),
-							 'CP'=>array('Ward'=>array(200000,250000),'OPD'=>(250000,300000)),							
-							 'HEM'=>array('Ward'=>array(300000,350000),'OPD'=>(350000,400000)),	
-							 'HIST'=>array('Ward'=>array(400000,450000),'OPD'=>(450000,500000)),	
-							 'CYTO'=>array('Ward'=>array(500000,550000),'OPD'=>(550000,600000)),	
-							 'BEC'=>array('Ward'=>array(600000,650000),'OPD'=>(650000,700000)),	
-							 'SER'=>array('Ward'=>array(600000,650000),'OPD'=>(650000,700000)),	
-								);
-	
-	//$ym will decide if sample_id is 10 digits or not (YYMMXXXXXX)
-	$ym=0;
-	//$ym=date("ym")*1000000;
-	//echo 'year and date string='.$ym.'<br>';
-	
-	if($location!='OPD')
-	{
-		$first_sample_id=$ym+0;
-		$last_most_sample_id=$ym+99999;
-	}
-	else
-	{
-		$first_sample_id=$ym+100000;
-		$last_most_sample_id=$ym+200000;
-	}
-	
-	//echo 'first_sample_id='.$first_sample_id.'<br>';
-	//echo 'last_most_sample_id='.$last_most_sample_id.'<br>';
-	$sql='select max(sample_id) msi from sample 
-				where 
-					sample_id>\''.$first_sample_id.'\' and 
-					sample_id<\''.$last_most_sample_id.'\'';
-	//echo $sql.'<br>';
-	$link=start_nchsls();
-	$result=mysql_query($sql,$link);
-	if($result===FALSE)
-	{
-		echo 'new_request_barcode_general_option2.php, find_next_sample_id:'.mysql_error().'<br>';
-		return FALSE;
-	}
-	else
-	{
-		$max_id_array=mysql_fetch_assoc($result);
-		//print_r($max_id_array);echo '<br>';
-		$last_sample_id=$max_id_array['msi'];
-		//echo 'last_sample_id='.$last_sample_id.'<br>';
-
-		if($last_sample_id===NULL)
-		{
-			$next_sample_id=$first_sample_id+1;
-			//echo 'next_sample_id='.$next_sample_id.'<br>';
-		}
-		else
-		{
-			$next_sample_id=$last_sample_id+1;
-			//echo 'next_sample_id='.$next_sample_id.'<br>';
-		}
-	}
-	return $next_sample_id;
-}
-*/
-
-
-//http://127.0.0.1/alllab/new_request_barcode_general_option2.php
 //http://127.0.0.1/alllab/new_request_barcode_general_option2.php
 
 function find_next_sample_id($section,$location)
 {
-//echo 'hi';
-//sample_id allocation policy
-//Section specific, if asked by section
-//Ward-vs-OPD specific, if asked by section
-//
 
-
+//first and last are not included in allocation
 	$sample_id_allocation=array(
-							'BIO'=>array('Ward'=>array(0,100000),'OPD'=>array(100001,200000)),
+							'BIO'=>array('Ward'=>array(0,100000),'OPD'=>array(100000,200000)),
 							 'CP'=>array('Ward'=>array(200000,250000),'OPD'=>array(250000,300000)),							
 							 'HE'=>array('Ward'=>array(300000,350000),'OPD'=>array(350000,400000)),	
 							 'HP'=>array('Ward'=>array(400000,450000),'OPD'=>array(450000,500000)),	
 							 'CY'=>array('Ward'=>array(500000,550000),'OPD'=>array(550000,600000)),	
 							 'BEC'=>array('Ward'=>array(600000,650000),'OPD'=>array(650000,700000)),	
-							 'SER'=>array('Ward'=>array(600000,650000),'OPD'=>array(650000,700000)),
-							 'SK'=> array('Ward'=>array(700000,750000),'OPD'=>array(750000,800000)),
-							 'IHBT'=>array('Ward'=>array(800000,850000),'OPD'=>array(850000,900000)),	 	
+							 'SER'=>array('Ward'=>array(700000,750000),'OPD'=>array(750000,800000)),
+							 'SK'=> array('Ward'=>array(800000,850000),'OPD'=>array(850000,900000)),
+							 'IHBT'=>array('Ward'=>array(900000,950000),'OPD'=>array(950000,1000000)),	 	
 								);
 	
 	//$ym will decide if sample_id is 10 digits or not (YYMMXXXXXX)
 	$ym=0;
-	//$ym=date("ym")*1000000;
-	//echo 'year and date string='.$ym.'<br>';
-	
-	/*
-	if($location!='OPD')
-	{
-		$first_sample_id=$ym+0;
-		$last_most_sample_id=$ym+99999;
-	}
-	else
-	{
-		$first_sample_id=$ym+100000;
-		$last_most_sample_id=$ym+200000;
-	}
-	*/
-
-	//$first_sample_id=$sample_id_allocation[$section][$location];
 		
 	if($location!='OPD')
 	{
@@ -378,8 +224,7 @@ function find_next_sample_id($section,$location)
 		$max_id_array=mysql_fetch_assoc($result);
 		//print_r($max_id_array);echo '<br>';
 		$last_sample_id=$max_id_array['msi'];
-		//echo 'last_sample_id='.$last_sample_id.'<br>';
-
+		
 		if($last_sample_id===NULL)
 		{
 			$next_sample_id=$first_sample_id+1;
@@ -387,6 +232,26 @@ function find_next_sample_id($section,$location)
 		}
 		else
 		{
+			//display error for non allocation of sample_id
+			if($last_sample_id+1>=$last_most_sample_id) //not tested when NULL
+			{
+				$string='<h4>section='.$section.' and location='.$location.
+				', allowed range=]'.$first_sample_id.','.$last_most_sample_id.'[,\
+				 last allocated='.$last_sample_id.'\
+				, free sample_id in the range</h4>';
+		
+	//			$string='sssss';
+		///////escape from php code, break line after
+		?>
+		<script  type="text/javascript">
+		document.getElementById('sample_list_box').innerHTML=document.getElementById('sample_list_box').innerHTML  + <?php echo '\''.$string.'\''; ?>;	
+							
+		</script>
+		<?php
+		/////////return to php code
+		
+				return FALSE;
+			}
 			$next_sample_id=$last_sample_id+1;
 			//echo 'next_sample_id='.$next_sample_id.'<br>';
 		}
@@ -1082,7 +947,7 @@ function analyse_examination_request($post)
 	{
 		$exploded_result=explode("|",$key);
 		//print_r($exploded_result);
-		if($exploded_result[0]=='examination' && $value=='yes')
+		if(($exploded_result[0]=='examination' || $exploded_result[0]=='mexamination' )&& $value=='yes')
 		{
 			if(in_array($exploded_result[1],$requested_examination)===FALSE)
 			{
@@ -1189,7 +1054,7 @@ function get_scope_info($ex_id)
 
 function insert_required_samples($post)
 {
-	echo $post['selected_ex'];
+	//echo $post['selected_ex'];
 	//$selected_ex=explode('|',$post['selected_ex']);
 	
 	$required_sample=array();
@@ -1218,7 +1083,7 @@ function insert_required_samples($post)
 		{
 				foreach($sample_type_value as $preservative=>$preservative_value)
 				{
-						echo 'insert a sample:'.$section.'-'.$sample_type.'-'.$preservative.'-'.$value.'<br>';
+						//echo 'insert a sample:'.$section.'-'.$sample_type.'-'.$preservative.'-'.$value.'<br>';
 						$sample_id=confirm_next_sample_id($section, $post['selected_location']);
 						if($sample_id===FALSE)
 						{
@@ -1238,7 +1103,6 @@ function insert_required_samples($post)
 
 						?>
 						<script  type="text/javascript">
-						//document.getElementById('sample_list_box').innerHTML=document.getElementById('sample_list_box').innerHTML +	"," + <?php echo '<h5>'.$sample_id.'</h5>';?> 	
 						document.getElementById('sample_list_box').innerHTML=document.getElementById('sample_list_box').innerHTML  + <?php echo '\''.$string.'\''; ?>;	
 						
 						</script>
@@ -1289,6 +1153,7 @@ function insert_required_samples($post)
 
 function get_examination_data_grand_section()
 {
+	list_macro();
 	list_section();
 	list_stp();
 	list_ex();
@@ -1325,7 +1190,7 @@ function show_stp(self,id) {
 	$result=mysql_query($sql,$link);
 	if(mysql_num_rows($result)==0){return;}
 
-	echo '<table><tr>';	
+	echo '<table  style="background:lightgreen"><tr>';	
 	while($section=mysql_fetch_assoc($result))
 	{
 
@@ -1375,8 +1240,8 @@ function show_ex(self,id) {
 	while($section=mysql_fetch_assoc($result))
 	{
 		echo '<div style="display:none;" class=t4^s id=\'t4^s^'.$section['section'].'\'';
-		echo '<table ><tr>';	
-		$sql_stp='select distinct sample_type, preservative from scope where section=\''.$section['section'].'\'';
+		echo '<table  style="background-color:green;"><tr>';	
+		$sql_stp='select distinct sample_type, preservative from scope where section=\''.$section['section'].'\'  order by sample_type,preservative';
 		$result_stp=mysql_query($sql_stp,$link);
 		if(mysql_num_rows($result_stp)>0)
 		{
@@ -1438,11 +1303,12 @@ echo  '<script  type="text/javascript">
 	$result=mysql_query($sql,$link);
 	if(mysql_num_rows($result)==0){return;}
 
-	echo '<input type=text readonly id="selected_ex" name="selected_ex">';
+	//echo '<input type=text readonly id="selected_ex" name="selected_ex">';
 
 	while($section=mysql_fetch_assoc($result))
 	{
-		$sql_stp='select distinct sample_type, preservative from scope where section=\''.$section['section'].'\'';
+		$sql_stp='select distinct sample_type, preservative from scope where section=\''.$section['section'].'\' order by sample_type';
+		//echo $sql_stp;
 		$result_stp=mysql_query($sql_stp,$link);
 		if(mysql_num_rows($result_stp)>0)
 		{
@@ -1452,7 +1318,7 @@ echo  '<script  type="text/javascript">
 				$sql_ex='select * from scope where 
 								section=\''.$section['section'].'\'	and
 								sample_type=\''.$array_stp['sample_type'].'\' and
-								preservative=\''.$array_stp['preservative'].'\'';
+								preservative=\''.$array_stp['preservative'].'\' order by name_of_examination';
 				//echo $sql_ex;			
 				$result_ex=mysql_query($sql_ex,$link);
 							
@@ -1487,6 +1353,87 @@ echo  '<script  type="text/javascript">
 			}
 		}
 	}
+}
+
+
+
+function list_macro()
+{
+	
+	echo  '<script  type="text/javascript">
+	function toggle_macro(id,cname) {
+				if(id.style.backgroundColor=="white")
+				{
+					id.style.backgroundColor="pink";
+				}
+				else
+				{
+					id.style.backgroundColor="white";
+				}
+	
+	
+	xx = document.getElementsByClassName(cname);
+	for(var x=0;x<xx.length;x++){
+					if(xx[x].value=="yes")
+					{
+						xx[x].value="no";	
+					}
+					else
+					{
+						xx[x].value="yes";	
+					}
+					}			
+					
+	}
+	</script>';
+
+
+	$sql='select * from macro';
+	$link=start_nchsls();
+	$result=mysql_query($sql,$link);
+	if(mysql_num_rows($result)==0){return;}
+
+	$macro=array();
+
+	while($ar=mysql_fetch_assoc($result))
+	{
+		$macro[$ar['name']][]=$ar['examination_id'];
+	}
+
+
+echo '<table style="background-color:pink;">';
+echo '<tr><th colspan=25>Macro</th></tr>';
+echo '<tr>';
+
+$i=1;
+
+	foreach($macro as $k=>$v)
+	{
+	if($i%5==1){echo '<tr>';}
+		echo '<td><button	style	="width:100%;background-color:white;"
+						id		="macro_'.$k.'"
+						title=\''.print_r($v,true).'\'
+						type	=button
+						name	="macro_'.$k.'"
+						onclick="toggle_macro(this,\'mmacro_'.$k.'\')" 
+						value	='.$k.'>'.$k.'</button></td>';
+	
+		foreach($v as $vv)
+		{
+		echo '<input type=hidden
+						value=no 
+						readonly 
+						id="mexamination|'.$vv.'" 
+						class="mmacro_'.$k.'"
+						name="mexamination|'.$vv.'">'; 
+		}
+	
+	if($i%5==0){echo '</tr>';}
+	$i=$i+1;
+	}
+
+echo '</table>';
+	return $macro;
 }
 
 
@@ -1536,10 +1483,12 @@ if(isset($_POST['action']))
 		echo '<td><input type=text readonly name=selected_sample_details value=\''.$_POST['selected_sample_details'].'\'></td>';
 		//textarea to preserve line breaks
 		echo '<td><textarea readonly name=extra >'.$_POST['extra'].'</textarea></td>';
-		echo '</tr><tr>';
+		echo '</tr>';
+
 		//get_examination_data_grand();
 		get_examination_data_grand_section();
 		echo '</form>';
+
 
 		}
 	}
@@ -1548,14 +1497,13 @@ if(isset($_POST['action']))
 	{
 		echo '<div id=sample_list_box></div>';
 		
-
 		if(insert_required_samples($_POST)===FALSE)
 		{
 			echo "<h3>Something was not selected/filled at all. Re enter</h3><br>";
 		}
-		echo '<form method=post>';
+		//echo '<form method=post>';
 		//get_patient_data();
-		echo '</form>';
+		//echo '</form>';
 	}
 		           
 }
@@ -1566,6 +1514,8 @@ else
 
 /*
 echo '<pre>';
+//print_r(list_macro());
+
 print_r($_POST);
 echo '</pre>';
 */

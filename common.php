@@ -64,6 +64,18 @@ printed-dispatched
  */
 function main_menu()
 {
+	
+echo '<table border=3 style="border-collapse:collapse;">';
+echo '<tr>';
+echo 	'<td>';
+echo		'<a href=new_request_barcode_general_option2.php>New Request</a>';
+echo 	'</td>';
+echo 	'<td>';
+echo		'<a href=request_report.php>Request Report</a>';
+echo 	'</td>';
+echo '</tr>';
+echo '</table>';
+/*
 	echo '<link rel="stylesheet" type="text/css" href="horizontal.css">
 	<script type="text/javascript" href=menu.js></script>
 	<table border=0><tr><td>
@@ -152,6 +164,8 @@ function main_menu()
 	</ul></div>
 
 	</td></tr></table>';
+*/
+
 }
 
 function mk_select_from_table($field,$disabled,$default)
@@ -408,7 +422,7 @@ function insert_single_examination($sample_id,$id)
 			return;
 		}
 		
-		$sql='insert into examination (`sample_id`, `id`, `name_of_examination`, `sample_type`, `preservative`, `method_of_analysis`, `result`, `unit`, `referance_range`, `code`, `details`,`NABL_Accredited`,`section`) 
+		$sql='insert into examination (`sample_id`, `id`, `name_of_examination`, `sample_type`, `preservative`, `method_of_analysis`, `result`, `unit`, `referance_range`, `code`, `details`,`NABL_Accredited`,`section`,`note`) 
 					values ('.
 					'\''.$sample_id.'\' , '.
 					'\''.$post_array['id'].'\' , '.
@@ -422,7 +436,8 @@ function insert_single_examination($sample_id,$id)
 					'\''.$post_array['code'].'\' , '.
 					'\'\' , '.
 					'\''.$post_array['NABL_Accredited'].'\' , '.
-					'\''.$post_array['section'].'\' )';
+					'\''.$post_array['section'].'\', '.
+					'\''.$post_array['note'].'\' )';
 			//$sql=substr($sql,0,-2);
 			//$sql=$sql.')';
 			//echo $sql;
